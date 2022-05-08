@@ -1,0 +1,506 @@
+* {
+    /*初始化样式*/
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    /*用于 获取 屏幕的可视宽高*/
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: '微软雅黑', Arial, Helvetica, 'microsoft yahei', sans-serif;
+
+}
+
+body {
+    /*让 body 初始 width 和 height 就 等于 页面可视区域的 宽高*/
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+
+    /*用于 测试的 样式*/
+    /*文字居中*/
+    display: flex;
+
+
+    margin: 0;
+    font: normal 100% Helvetica Arial sans-serif;
+    background: rgba(0, 0, 0, 1) url(../img/b0.jpg) repeat-y;
+    background-size: cover;
+    overflow: hidden;
+}
+
+
+@media screen and (orientation: portrait) {
+    body {
+        transform-origin: 0 0;
+        -webkit-transform-origin: 0 0;
+        -moz-transform-origin: 0 0;
+        -ms-transform-origin: 0 0;
+        -webkit-transform: rotate(90deg) translateY(-100vw);
+        -moz-transform: rotate(90deg) translateY(-100vw);
+        -ms-transform: rotate(90deg) translateY(-100vw);
+        transform: rotate(90deg) translateY(-100vw);
+        width: 100vh;
+        height: 100vw;
+        /*去掉overflow 微信显示正常，但是浏览器有问题，竖屏时强制横屏缩小*/
+        overflow: hidden;
+    }
+
+    #stage {
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 50vh;
+        height: 100vw;
+        border-right: 1px inset black;
+        border-radius: 10px;
+        box-shadow: 0 0 10px 0 white;
+    }
+
+    #stage2 {
+        z-index: 1;
+        left: 50vh;
+        top: 0;
+        width: 50vh;
+        height: 100vw;
+        border-right: 1px inset black;
+        border-radius: 10px;
+        box-shadow: 0 0 10px 0 white;
+    }
+
+}
+
+@media screen and (orientation: landscape) {
+    body {
+        -webkit-transform: rotate(0);
+        -moz-transform: rotate(0);
+        -ms-transform: rotate(0);
+        transform: rotate(0);
+    }
+
+    #stage {
+        z-index: 2;
+        left: 0;
+        top: 0;
+        width: 50vw;
+        height: 100vh;
+        border-right: 1px inset black;
+        border-radius: 10px;
+        box-shadow: 0 0 10px 0 white;
+    }
+
+    #stage2 {
+        z-index: 2;
+        left: 50vw;
+        top: 0;
+        width: 50vw;
+        height: 100vh;
+        border-right: 1px inset black;
+        border-radius: 10px;
+        box-shadow: 0 0 10px 0 white;
+    }
+}
+
+
+.bg {
+    position: absolute;
+    z-index: 5;
+    margin: -28vmin;
+    width: 56vmin;
+    height: 56vmin;
+    border-radius: 1vmin;
+    background: rgba(70, 70, 75, 0.3);
+    border: inset rgba(100, 100, 100, 0.6) 2px;
+    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.5);
+}
+
+
+.bgPC {
+    position: absolute;
+    z-index: 5;
+    margin: -14vmin;
+    width: 28vmin;
+    height: 28vmin;
+    border-radius: 1vmin;
+    background: rgba(70, 70, 75, 0.3);
+    border: inset rgba(100, 100, 100, 0.6) 2px;
+    box-shadow: 0 0 10px 0 rgba(50, 50, 50, 0.5);
+}
+
+.innerbg {
+    position: relative;
+    top: 28vmin;
+    left: 28vmin;
+    z-index: 6;
+    margin: -14vmin;
+    width: 28vmin;
+    height: 28vmin;
+    max-height: 150px;
+    max-width: 150px;
+    border-radius: 14vmin;
+    background: darkslateblue;
+    opacity: 0.8;
+    border: outset rgba(50, 50, 50, 0.8) 2px;
+    box-shadow: 0 0 10px 0 rgba(2, 50, 200, 0.5);
+}
+
+
+.joystick {
+    z-index: 7;
+    position: absolute;
+    margin: -8vmin;
+    display: none;
+    width: 16vmin;
+    height: 16vmin;
+    /*max-height: 80px;*/
+    /*max-width: 80px;*/
+    border-radius: 8vmin;
+    background: rgba(255, 255, 255, 0.8);
+    border: inset rgba(50, 50, 50, 0.5) 2px;
+    box-shadow: 0 0 2px 0 rgba(200, 200, 255, 0.8);
+}
+
+.joystickPC {
+    z-index: 7;
+    position: absolute;
+    margin: -5vmin;
+    display: none;
+    width: 10vmin;
+    height: 10vmin;
+    border-radius: 5vmin;
+    background: rgba(255, 255, 255, 0.8);
+    border: inset rgba(50, 50, 50, 0.5) 2px;
+    box-shadow: 0 0 2px 0 rgba(200, 200, 255, 0.8);
+}
+
+
+#settingsbox {
+    float: bottom;
+    background: rgba(100, 100, 100, 0.5);
+    opacity: 50;
+    z-index: 11;
+    border-radius: 10px;
+    border-left: 2px black outset;
+    color: aliceblue;
+    position: absolute;
+    min-width: 13em;
+    width: 30%;
+    height: 100%;
+    top: 0;
+    right: 0;
+
+    /*display: none;*/
+    box-shadow: 0 0 10px 0 rgba(200, 200, 200, 0.5);
+}
+
+#connectbox {
+    position: absolute;
+    right: 14em;
+    top: 2em;
+}
+
+
+#statelight {
+    float: bottom;
+    width: 2em;
+    height: 1em;
+    background-color: yellow;
+    border-radius: 0.5em;
+    top: 0;
+    left: 0;
+    position: relative;
+    box-shadow: 0 0 20px yellow;
+}
+
+/*/ / 状态连接中 */
+#statetext {
+    color: blue;
+    position: relative;
+    font-size: 1em;
+    width: 4em;
+    height: 1em;
+    top: -0.2em;
+    left: 2.5em;
+    user-select: none;
+}
+
+#disconnect {
+    z-index: 10;
+    position: relative;
+    width: 4em;
+    height: 2em;
+    top: -1.4em;
+    left: 3em;
+    margin: 0;
+    padding: 0;
+    border-radius: 1em;
+}
+
+#reloadbtn {
+    z-index: 10;
+    position: relative;
+    top: 1em;
+    left: 8em;
+    width: 4em;
+    height: 2em;
+    border-radius: 1em;
+}
+
+#modeswitch {
+    z-index: 10;
+    background-image: url("../img/switch1.png");
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    color: darkorange;
+    font-size: 0.8em;
+    top: 1em;
+    left: -10em;
+    width: 5.4em;
+    height: 2.1em;
+    border-radius: 1.25em;
+}
+
+#detalL {
+    /* 具体速度加速度*/
+    float: left;
+    color: aliceblue;
+    font-size: 1.8em;
+    position: absolute;
+    text-align: left;
+    top: 0.5em;
+    left: 1em;
+    padding-bottom: 1px;
+    line-height: 1.8em;
+    user-select: none;
+}
+
+
+#detalR {
+    /* 具体速度加速度*/
+    float: right;
+    color: aliceblue;
+    font-size: 1.8em;
+    position: absolute;
+    text-align: left;
+    top: 0.5em;
+    right: 4em;
+    padding-bottom: 1px;
+    line-height: 1.8em;
+    user-select: none;
+}
+#inputform {
+    position: absolute;
+    width: 13em;
+    min-width: 13em;
+    height: 80%;
+    left: 0;
+    bottom: 0;
+    text-align: right;
+}
+
+
+.inp {
+    width: 70px;
+    margin: 10px;
+    text-align: center;
+    background: border-box;
+    text-decoration: none;
+    display: inline-block;
+    color: white;
+    border-radius: 1px;
+    border: darkgray inset 1px;
+}
+
+.btn {
+    margin-right: 10px;
+    background: border-box;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    color: white;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#menubtn {
+    background-image: url("../img/menu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: rgba(200, 200, 255, 0.8);
+    opacity: 0.51;
+    width: 3em;
+    height: 3em;
+    top: 2em;
+    z-index: 90;
+    right: 2em;
+    position: absolute;;
+}
+
+#test {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 0.5em;
+    color: red;
+    text-align: left;
+}
+
+#tipstext {
+    z-index: 0;
+    position: absolute;
+    width: 20em;
+    bottom: 0;
+    right: 0;
+    font-size: 1em;
+    color: white;
+    text-align: left;
+    user-select: none;
+}
+
+.vbtn {
+
+    width: 3em;
+    height: 5em;
+    border-radius: 0.8em;
+    transition: 0.15s all;
+}
+
+.vbtn:active {
+    color: white;
+    width: 3em;
+    height: 5em;
+    border-radius: 2em;
+    transform: rotateY(35deg);
+    box-shadow: 2px 1px 1px 5px rgba(120, 150, 180, 0.1);
+
+}
+
+.tbtn {
+
+    width: 5em;
+    height: 3em;
+    border-radius: 0.8em;
+    transition: 0.15s all;
+}
+
+.tbtn:active {
+    color: white;
+    width: 5em;
+    height: 3em;
+    border-radius: 2em;
+        box-shadow: 1px 5px 2px 5px rgba(120, 150, 180, 0.1);
+
+    transform: rotateX(35deg);
+}
+
+#vbox {
+    z-index: 11;
+    position: absolute;
+    left: 9em;
+    top: 45%;
+    height: 10em;
+    display: block;
+}
+
+#tbox {
+    z-index: 11;
+    position: absolute;
+    top: 45%;
+    right: 10em;
+    height: 10em;
+    display: block;
+
+}
+
+#btnW {
+    background: url("../img/uparrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: 0;
+    top: 0;
+
+}
+
+#btnS {
+    background: url("../img/downarrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: 0;
+    top: 6em;
+
+}
+
+#btnA {
+    background: url("../img/leftarrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: -5em;
+    top: 4.5em;
+
+}
+
+#btnD {
+    background: url("../img/rightarrow.png") no-repeat;
+    background-size: contain;
+    background-position: center;
+    position: absolute;
+    text-align: center;
+    left: 3em;
+    top: 4.5em;
+}
+
+#btnI {
+    background: url("../img/uparrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: 0;
+    top: 0;
+
+}
+
+#btnK {
+    background: url("../img/downarrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: 0;
+    top: 6em;
+
+}
+
+#btnJ {
+    background: url("../img/leftarrow.png") no-repeat;
+    background-size: contain;
+    position: absolute;
+    text-align: center;
+    background-position: center;
+    left: -5em;
+    top: 4.5em;
+
+}
+
+#btnL {
+    background: url("../img/rightarrow.png") no-repeat;
+    background-size: contain;
+    background-position: center;
+    position: absolute;
+    text-align: center;
+    left: 3em;
+    top: 4.5em;
+}
+

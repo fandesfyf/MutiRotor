@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>控制页面</title>
+    <meta charset="utf-8"/>
+    <meta CONTENT="no-cache" HTTP-EQUIV="pragma">
+    <meta CONTENT="no-store, must-revalidate" HTTP-EQUIV="Cache-Control">
+    <meta CONTENT="Wed, 26 Feb 1997 08:21:57 GMT" HTTP-EQUIV="expires">
+    <meta CONTENT="0" HTTP-EQUIV="expires">
+    <meta content="true" name="x5-fullscreen">
+    <meta content="width=device-width, initial-scale=1,maximum-scale=1.0, user-scalable=no" name="viewport">
+    <link href="html/mutiRotor.css" rel="stylesheet" type="text/css"/>
+    <!--    <style type="text/css">-->
+    <!--    </style>-->
+</head>
+<body onkeydown="controller.keydown(event)" onkeyup="controller.keyup(event)">
+<div id="test">test</div>
+<div id="stage" style="position:absolute">
+    <div class="joystickbox" id="joystickbox">
+        <div class="bg" id='bg'>
+            <!--            <div id="innerbg" class="innerbg"></div>-->
+        </div>
+        <div class="joystick" id="joystick"></div>
+    </div>
+    <div id="vbox">
+        <button class="vbtn" id="btnW" onmousedown="controlclickdown('W')" onmouseup="controlclickup('W')"
+                ontouchend="btntouchend('W')" ontouchstart="btntouchstart('W')">W
+        </button>
+        <button class="vbtn" id="btnS" onmousedown="controlclickdown('S')" onmouseup="controlclickup('S')"
+                ontouchend="btntouchend('S')" ontouchstart="btntouchstart('S')">S
+        </button>
+        <button class="tbtn" id="btnA" onmousedown="controlclickdown('A')" onmouseup="controlclickup('A')"
+                ontouchend="btntouchend('A')" ontouchstart="btntouchstart('A')">A
+        </button>
+        <button class="tbtn" id="btnD" onmousedown="controlclickdown('D')" onmouseup="controlclickup('D')"
+                ontouchend="btntouchend('D')" ontouchstart="btntouchstart('D')">D
+        </button>
+    </div>
+
+</div>
+<div id="stage2" style="position:absolute">
+    <div id="tipstext" onbeforecopy='return false' oncontextmenu='return false' oncopy='document.selection.empty()'
+         ondragstart='return false' onselect='document.selection.empty()' onselectstart='return false'><p>
+        使用方法:<br>摇杆控制:左手油门遥控<br>
+        键盘控制:WSAD键控制左侧摇杆,IKJL键控制右侧摇杆,连按加速;除油门通道松手即停;
+        ESC/q键断开<br>虚拟按键:与键盘规则一样<br>虚拟摇杆/虚拟按键模式下外接键盘均可用</p></div>
+    <div class="joystickbox" id="joystickbox2">
+        <div class="bg" id='bg2'>
+            <!--            <div id="innerbg2" class="innerbg"></div>-->
+        </div>
+        <div class="joystick" id="joystick2"></div>
+    </div>
+    <div id="tbox">
+        <button class="vbtn" id="btnI" onmousedown="controlclickdown('I')" onmouseup="controlclickup('I')"
+                ontouchend="btntouchend('I')" ontouchstart="btntouchstart('I')">I
+        </button>
+        <button class="vbtn" id="btnK" onmousedown="controlclickdown('K')" onmouseup="controlclickup('K')"
+                ontouchend="btntouchend('K')" ontouchstart="btntouchstart('K')">K
+        </button>
+        <button class="tbtn" id="btnJ" onmousedown="controlclickdown('J')" onmouseup="controlclickup('J')"
+                ontouchend="btntouchend('J')" ontouchstart="btntouchstart('J')">J
+        </button>
+        <button class="tbtn" id="btnL" onmousedown="controlclickdown('L')" onmouseup="controlclickup('L')"
+                ontouchend="btntouchend('L')" ontouchstart="btntouchstart('L')">L
+        </button>
+    </div>
+</div>
+<button id="menubtn" onclick="menuclick()"></button>
+<div id="connectbox">
+    <div id="statelight"><p id="statetext">连接中...</p></div>
+    <button class="btn" id="reloadbtn" onclick="pagereload()" style="background: darkred">刷新</button>
+    <button class="btn" id="disconnect" onclick="controller.disconnect()" style="background-color: darkred">断开</button>
+    <button id="modeswitch" onclick="changemode()">姿态模式</button>
+</div>
+<form id="detalL">
+    <p id="valueV">T:--</p><!-- throttle油门 -->
+    <p id="valueR">Roll:--</p><!-- roll偏航rpy -->
+</form>
+<form id="detalR">
+    <p id="valueP">Pitch:--</p><!-- throttle油门 -->
+    <p id="valueY">Yaw:--</p><!-- roll偏航rpy -->
+</form>
+<div id="settingsbox">
+    <form id="inputform">
+        <button class="btn" onclick="reseteventhandle()" type="button">重置</button>
+        <button class="btn" onclick="updatahandle()" type="button">更新</button>
+        <br>
+        初始dv(m/s): <input class="inp" id="initv" max="2" min="0.01" step="0.10" type="number" value="0.15"><br>
+        初始Θ(rad/s): <input class="inp" id="initt" max="2" min="0.05" step="0.10" type="number" value="0.2"><br>
+        dv增量(m/s): <input class="inp" id="incv" max="1" min="0.1" step="0.10" type="number" value="0.2"><br>
+        Θ增量(rad/s): <input class="inp" id="inct" max="1" min="0.1" step="0.10" type="number" value="0.15"><br>
+        最大dx(m/s): <input class="inp" id="maxv" max="5" min="1" step="0.10" type="number" value="2.5"><br>
+        最大Θ(rad/s): <input class="inp" id="maxt" max="5" min="1" step="0.10" type="number" value="2"><br>
+        双击判定(ms):<input class="inp" id="dcdelay" max="600" min="100" step="5" type="number" value="250">
+        <div>
+            <br>
+            <p>tips:按键模式下使用;dv值为平动速度,Θ为转动速度;按下按键触发初始速度,双击在速度方向上+增量</p>
+        </div>
+    </form>
+
+</div>
+<script>
+    var touchmode = true;
+    var bg = document.getElementById('bg');
+    var bg2 = document.getElementById('bg2');
+    var joystick1 = document.getElementById('joystick');
+    var joystick2 = document.getElementById('joystick2');
+    var stage1 = document.getElementById('stage');
+    var stage2 = document.getElementById('stage2');
+    var subX = 0;//相对位移
+    var subY = R;
+    var subX2 = 0;//相对位移
+    var subY2 = 0;
+
+    var cx, cy, cx2, cy2;
+    var R = document.getElementById('bg').clientWidth / 2;
+    var debugtext = document.getElementById("test")
+    var on_rotation = window.innerWidth < window.innerHeight;
+    var viewport = document.querySelector("meta[name=viewport]");
+
+    bg.style.display = "block";
+    joystick1.style.display = "block";
+    bg2.style.display = "block";
+    joystick2.style.display = "block";
+    cx = stage1.clientWidth / 2
+    cy = stage1.clientHeight * 3 / 5
+
+    bg.style.left = joystick1.style.left = cx + 'px';
+    bg.style.top = cy + 'px';
+    bg2.style.left = joystick2.style.left = stage2.clientWidth / 2 + 'px';
+    bg2.style.top = joystick2.style.top = stage2.clientHeight * 3 / 5 + 'px';
+    // cx = bg.offsetLeft + bg.clientWidth / 2
+    // cy = bg.offsetTop + bg.clientHeight / 2
+    joystick1.style.top = cy + bg.offsetHeight / 4 + 'px'
+    if (window.innerWidth < window.innerHeight) {
+        joystick1.style.top = cy + bg.offsetHeight / 2 + 'px'
+    }
+    console.log(cx, cy, bg.offsetHeight, bg.offsetWidth)
+    cx2 = document.body.clientWidth / 2
+    cy2 = document.body.clientHeight / 2
+
+
+    window.onresize = function () {//窗口变化时
+        R = document.getElementById('bg').clientWidth / 2
+        console.log("widthchangeto ", R)
+        on_rotation = window.innerWidth < window.innerHeight;
+
+    }
+
+    function changemode() {
+        touchmode = !touchmode;
+        console.log("changmode", touchmode)
+        if (touchmode) {
+            controller.control_mode=0
+            document.getElementById("btnW").style.display = 'none'
+            document.getElementById("btnS").style.display = 'none'
+            document.getElementById("btnA").style.display = 'none'
+            document.getElementById("btnD").style.display = 'none'
+            document.getElementById("btnI").style.display = 'none'
+            document.getElementById("btnK").style.display = 'none'
+            document.getElementById("btnJ").style.display = 'none'
+            document.getElementById("btnL").style.display = 'none'
+            document.getElementById("joystickbox").style.display = 'block'
+            document.getElementById("joystickbox2").style.display = 'block'
+            document.getElementById("modeswitch").style = "background-image: url(\"img/switch2.png\");"
+            document.getElementById("modeswitch").innerText = "姿态模式"
+        } else {
+            controller.control_mode=1
+            document.getElementById("btnW").style.display = 'block'
+            document.getElementById("btnS").style.display = 'block'
+            document.getElementById("btnA").style.display = 'block'
+            document.getElementById("btnD").style.display = 'block'
+            document.getElementById("btnI").style.display = 'block'
+            document.getElementById("btnK").style.display = 'block'
+            document.getElementById("btnJ").style.display = 'block'
+            document.getElementById("btnL").style.display = 'block'
+            document.getElementById("joystickbox").style.display = 'none'
+            document.getElementById("joystickbox2").style.display = 'none'
+            document.getElementById("modeswitch").style = "background-image: url(\"img/switch1.png\");"
+            document.getElementById("modeswitch").innerText = "位置模式"
+        }
+    }
+
+    function btntouchstart(btn) {//触屏时按键按下
+        debugtext.innerText = btn;
+        document.getElementById('btn' + btn).style = "color:white; border-radius: 1em;";
+        controlclickdown(btn)
+    }
+
+    function btntouchend(btn) {//触屏时按键释放
+        debugtext.innerText += btn + ' touchend';
+        console.log(btn, "touchup")
+        document.getElementById('btn' + btn).style = "color:black; border-radius: 0.8em;";
+        controlclickup(btn)
+    }
+
+    function controlclickdown(btn) {//鼠标点击直接触发这步,也会从触屏函数处理之后跳到这个函数触发,作用是对按键事件进行封装
+        console.log(btn, "down", btn)
+        e = event
+        e.key = btn
+        controller.keydown(e)
+    }
+
+    function controlclickup(btn) {//同上
+        console.log(btn, "up")
+        e = event
+        e.key = btn
+        controller.keyup(e)
+    }
+
+    function pagereload() {
+        location.reload(true);
+    }
+
+    function setMobileStyle() {
+
+    }
+
+    function setPcStyle() {
+        document.getElementById("joystick").className = "joystickPC"
+        document.getElementById("bg").className = "bgPC"
+        document.getElementById("joystick2").className = "joystickPC"
+        document.getElementById("bg2").className = "bgPC"
+        R = document.getElementById('bg').clientWidth / 2
+
+    }
+</script>
+<script type="text/javascript">
+    var onshowmenu = false
+    var on_mobile = false
+    document.getElementById("settingsbox").style.display = "none";
+
+    function browserRedirect() {
+        settingbox = document.getElementById("settingsbox");
+        var sUserAgent = navigator.userAgent.toLowerCase();
+        if (/ipad|iphone|midp|rv:1.2.3.4|ucweb|android|windows ce|windows mobile/.test(sUserAgent)) {
+            //跳转移动端页面
+            on_mobile = true
+            document.getElementsByTagName("body")[0].style.width = document.documentElement.clientHeight + "px";
+            // console.log( window.innerWidth,window.innerHeight,document.documentElement.clientWidth,document.documentElement.clientHeight)
+            // debugtext.innerText = "移动端,"+window.innerHeight.toString()+" "+window.innerWidth.toString()+" " +
+            //     document.documentElement.clientWidth.toString()+' '+document.documentElement.clientHeight.toString()+" "+
+            //     document.body.clientWidth.toString()+" "+document.body.clientHeight.toString()
+            console.log("移动端")
+            setMobileStyle();
+        } else {
+            //跳转pc端页面
+            on_mobile = false
+            debugtext.innerText = "pc端"
+            console.log("pc端")
+            setPcStyle();
+        }
+    }
+
+    browserRedirect();
+
+
+    function menuclick() {
+        if (onshowmenu) {
+            document.getElementById("settingsbox").style.display = "none";
+            onshowmenu = false;
+        } else {
+            document.getElementById("settingsbox").style.display = "block";
+            onshowmenu = true
+        }
+    }
+
+    // if (on_mobile) {
+    //     menuclick();
+    // }
+
+</script>
+<script type="text/javascript">
+    String.prototype['format'] = function () {
+        const e = arguments;
+        return !!this && this.replace(/\{(\d+)\}/g, function (t, r) {
+            return e[r] ? e[r] : t;
+        });
+    };
+    var connected = false;
+    var is_support = ("WebSocket" in window);
+    if (is_support) {
+        console.log("浏览器支持")
+    } else {
+        alert("你的浏览器不支持Websocket!")
+    }
+    var gettime = function () {
+        var t = new Date()
+        return t.getTime()
+    };
+    var AvailableKeys = ["w", "s", "a", "d", "i", "j", "k", "l", "arrowup", "arrowdown", "arrowleft", "arrowright", "q", "escape"]
+    var valueV = document.getElementById("valueV")
+    var valueR = document.getElementById("valueR")
+    var valueP = document.getElementById("valueP")
+    var valueY = document.getElementById("valueY")
+
+    function Controller() {
+        this.control_mode = 1//0为姿态控制模式,1为位置控制
+        this.last_click = ["0", 0]  // 记录上一次按键释放的时间和键
+        this.cur_v = 0  // 当前速度
+        this.cur_theta = 0  // 当前角速度
+        this.p_v = 0  // 此前发送的速度
+        this.p_t = 0  // ..
+        this.scale_cp = 100//变换的值
+        this.err = 8
+        this.controlling = false  // 控制主线程的变量
+        this.max_v = 2.5  // 最大速度
+        this.max_theta = 2  // 最大角速度
+        this.init_v = 0.15
+        this.init_t = 0.2
+        this.inc_v = 0.2  // 速度增量
+        this.inc_t = 0.15  // 角速度..
+        this.doubleclick_delay = 250  // 判定双击的时间间隔ms
+        this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+        this.p_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}
+        this.keydown = function (e) {
+            console.log(e.type, e.key);
+            kn = e.key.toLowerCase()
+            var r;
+            if (AvailableKeys.indexOf(kn) === -1) {
+                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+            } else if (["q", "escape"].indexOf(kn) !== -1)  // 退出
+            {
+                console.log("quit")
+                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+                this.controlling = false
+
+            } else if (kn === this.last_click[0] && gettime() - this.last_click[1] < this.doubleclick_delay) // 判断是否是双击
+            {
+                console.log("加速", kn)
+                if ("ws".indexOf(kn) !== -1) {
+                    clearTimeout(this.setTtimeout)
+                    this.cur_param.t += (kn === "w") ? this.inc_v : -this.inc_v
+                } else if ("ad".indexOf(kn) !== -1) {
+                    clearTimeout(this.setRtimeout)
+                    this.cur_param.r += (kn === "a") ? this.inc_v : -this.inc_v
+                } else if ("ik".indexOf(kn) !== -1) {
+                    clearTimeout(this.setPtimeout)
+                    this.cur_param.p += (kn === "i") ? this.inc_v : -this.inc_v
+                } else if ("jl".indexOf(kn) !== -1) {
+                    clearTimeout(this.setYtimeout)
+                    this.cur_param.y += (kn === "j") ? this.inc_v : -this.inc_v
+                }
+                this.send_speed()
+                // this.doubleclick(kn)
+            } else // 剩下的只有wsad和箭头键
+            {
+                if (kn === "w") {
+                    if (this.cur_param.t === 0) {
+                        this.cur_param.t = this.init_v
+                    } else {
+                        this.cur_param.t = (this.cur_param.t < 0) ? 0 : this.cur_param.t
+                    }
+                } else if (kn === "s") {
+                    if (this.cur_param.t === 0) {
+                        this.cur_param.t = -this.init_v
+                    } else {
+                        this.cur_param.t = (this.cur_param.t > 0) ? 0 : this.cur_param.t
+                    }
+                } else if (kn === "d") {
+                    if (this.cur_param.r === 0) {
+                        this.cur_param.r = -this.init_v
+                    } else {
+                        this.cur_param.r = (this.cur_param.r > 0) ? 0 : this.cur_param.r
+                    }
+                } else if (kn === "a") {
+                    if (this.cur_param.r === 0) {
+                        this.cur_param.r = this.init_v
+                    } else {
+                        this.cur_param.r = (this.cur_param.r < 0) ? 0 : this.cur_param.r
+                    }
+                } else if (kn === "i") {
+                    if (this.cur_param.p === 0) {
+                        this.cur_param.p = this.init_v
+                    } else {
+                        this.cur_param.p = (this.cur_param.p < 0) ? 0 : this.cur_param.p
+                    }
+                } else if (kn === "k") {
+                    if (this.cur_param.p === 0) {
+                        this.cur_param.p = -this.init_v
+                    } else {
+                        this.cur_param.p = (this.cur_param.p > 0) ? 0 : this.cur_param.p
+                    }
+                } else if (kn === "j") {
+                    if (this.cur_param.y === 0) {
+                        this.cur_param.y = this.init_v
+                    } else {
+                        this.cur_param.y = (this.cur_param.y < 0) ? 0 : this.cur_param.y
+                    }
+                } else if (kn === "l") {
+                    if (this.cur_param.y === 0) {
+                        this.cur_param.y = -this.init_v
+                    } else {
+                        this.cur_param.y = (this.cur_param.y > 0) ? 0 : this.cur_param.y
+                    }
+                }
+
+                this.send_speed()
+            }
+        }
+        this.keyup = function (e) {
+            // console.log(e.type, e.key);
+            kn = e.key.toLowerCase()
+            if (AvailableKeys.indexOf(kn) === -1)
+                return
+            if (kn.length === 1) {
+                cv = this.cur_param.t
+                ct = this.cur_param.r
+                this.last_click = [kn, Number(gettime().toString())]
+                if ("ws".indexOf(kn) !== -1) {
+                    clearTimeout(this.setTtimeout)
+                    this.setTtimeout = setTimeout(function () {
+                        console.log("t超时重置")
+                        this.controller.cur_param.t = 0
+                        this.controller.send_speed()
+                    }, this.doubleclick_delay)
+                } else if ("ad".indexOf(kn) !== -1) {
+                    clearTimeout(this.setRtimeout)
+                    this.setRtimeout = setTimeout(function () {
+                        console.log("r超时重置")
+                        this.controller.cur_param.r = 0
+                        this.controller.send_speed()
+                    }, this.doubleclick_delay)
+                } else if ("ik".indexOf(kn) !== -1) {
+                    clearTimeout(this.setPtimeout)
+                    this.setPtimeout = setTimeout(function () {
+                        console.log("ik超时重置")
+                        this.controller.cur_param.p = 0
+                        this.controller.send_speed()
+                    }, this.doubleclick_delay)
+                } else if ("jl".indexOf(kn) !== -1) {
+                    clearTimeout(this.setYtimeout)
+                    this.setYtimeout = setTimeout(function () {
+                        console.log("jl超时重置")
+                        this.controller.cur_param.y = 0
+                        this.controller.send_speed()
+                    }, this.doubleclick_delay)
+                } else {
+                    this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+                }
+                this.send_speed()
+                this.cur_param.t = cv
+                this.cur_param.r = ct
+            }
+        }
+        // 打开一个 web socket
+        this.ws = new WebSocket("ws://" + document.domain + ":8787/control");
+        this.ws.onopen = function () {
+            // Web Socket 已连接上，使用 send() 方法发送数据
+            this.send("connect succeed");
+            console.log("connect succeed...");
+            document.getElementById("statelight").style = "background-color:lawngreen;box-shadow: 0 0 20px lightgreen;"
+            document.getElementById("statetext").innerText = "连接成功"
+            if (this.control_mode === 1) {
+                valueV.innerText = "x:0.0"
+                valueR.innerText = "y:0.0"
+                valueP.innerText = "z:0.0"
+                valueY.innerText = "Θ:0.0"
+            } else {
+                valueV.innerText = "T:0.0"
+                valueR.innerText = "Roll:0.0"
+                valueP.innerText = "Pitch:0.0"
+                valueY.innerText = "Yaw:0.0"
+            }
+            connected = true
+        };
+        this.ws.onmessage = function (evt) {
+            var received_msg = evt.data;//心跳连接
+            // console.log("beat...", received_msg);
+        };
+        this.ws.onclose = function () {
+            // 关闭 websocket
+            valueV.innerText = "T:--"
+            valueR.innerText = "Roll:--"
+            valueP.innerText = "Pitch:--"
+            valueY.innerText = "Yaw:--"
+            console.log("连接已关闭...");
+            document.getElementById("statelight").style = "background-color:gray;box-shadow: 0 0 20px gray;"
+            if (connected) {
+                document.getElementById("statetext").innerText = "异常关闭"
+                this.controller.ws = new WebSocket("ws://" + document.domain + ":8787/control");
+            } else connected = false
+
+
+        };
+        this.send = function (data) {
+            this.ws.send(JSON.stringify(data))
+            // console.log("send", data)
+        }
+        this.disconnect = function () {
+            console.log("断开")
+            this.ws.close()
+            if (connected) {
+                connected = false
+                document.getElementById("disconnect").innerText = "重新连接"
+                document.getElementById("disconnect").style = "height:50px;"
+            } else {
+                location.reload(true);
+                // document.getElementById("disconnect").onclick = window.location.reload()
+                connected = true
+            }
+
+        }
+        this.set_parm = function (maxv = 2.5, maxt = 2, initv = 0.15, initt = 0.2, incv = 0.2, inct = 0.15, dcdelay = 250) {
+            this.max_v = parseFloat(maxv)  // 最大速度
+            this.max_theta = parseFloat(maxt) // 最大角速度
+            this.init_v = parseFloat(initv)
+            this.init_t = parseFloat(initt)
+            this.inc_v = parseFloat(incv)  // 速度增量
+            this.inc_t = parseFloat(inct)  // 角速度..
+            this.doubleclick_delay = parseFloat(dcdelay) // 判定双击的时间间隔ms
+            document.getElementById("initv").value = initv
+            document.getElementById("initt").value = initt
+            document.getElementById("incv").value = incv
+            document.getElementById("inct").value = inct
+            document.getElementById("maxv").value = maxv
+            document.getElementById("maxt").value = maxt
+            document.getElementById("dcdelay").value = dcdelay
+
+        }
+        this.send_speed = function () {
+
+            // if (this.control_mode === 0 && this.cur_param !== this.p_param) {
+            //     this.publish_speed()
+            //     return
+            // }
+            // if (Math.abs(this.cur_v) > this.max_v) {  // 最大速度判定
+            //     console.log("最大速度!{0}".format(this.max_v))
+            //     this.cur_v = this.cur_v / Math.abs(this.cur_v) * this.max_v
+            // }
+            // if (Math.abs(this.cur_theta) > this.max_theta) {
+            //     this.cur_theta = this.cur_theta / Math.abs(this.cur_theta) * this.max_theta
+            // }
+            // // console.log("speed:{0}    theta:{1}".format( this.cur_v, this.cur_theta))
+            //
+            // if (this.cur_v !== this.p_v ||
+            //     this.cur_theta !== this.p_t
+            // ) {
+            this.publish_speed()
+            // setjoystickpos(this.cur_v, this.cur_theta)
+
+
+            // if (this.cur_v !== this.max_v) {
+            //     this.state.setstate("控制中...")
+            // } else {
+            //     this.state.setstate("最大速度!", format(this.cur_v, "2.2f"),
+            //         format(this.cur_theta, "2.2f"))
+            // }
+
+            // }
+            // this.p_v = this.cur_v;
+            // this.p_t = this.cur_theta;
+
+
+        }
+        this.publish_speed = function () {
+            this.p_param = this.cur_param
+            packdata = JSON.parse((JSON.stringify(this.cur_param) + JSON.stringify({"mode": this.control_mode})).replace(/}{/, ','));
+            console.log(packdata,connected)
+            if (connected) {
+                this.send(packdata)
+                if (this.control_mode===1) {
+                    valueV.innerText = "x:"+ this.cur_param["t"].toFixed(2).toString()
+                    valueR.innerText = "y:"+ this.cur_param["r"].toFixed(2).toString()
+                    valueP.innerText = "z:"+ this.cur_param["p"].toFixed(2).toString()
+                    valueY.innerText = "Θ:"+ this.cur_param["y"].toFixed(2).toString()
+                }else {
+                    valueV.innerText = "T:" + this.cur_param["t"].toFixed(2).toString()
+                    valueR.innerText = "Roll:" + this.cur_param["r"].toFixed(2).toString()
+                    valueP.innerText = "Pitch:" + this.cur_param["p"].toFixed(2).toString()
+                    valueY.innerText = "Yaw:" + this.cur_param["y"].toFixed(2).toString()
+                }
+            }
+        }
+
+    }
+
+    var controller = new Controller()
+    changemode();
+
+    function reseteventhandle() {
+        console.log("重置参数")
+        controller.set_parm()
+    }
+
+    function updatahandle() {
+        console.log("更新参数")
+        initv = document.getElementById("initv").value
+        initt = document.getElementById("initt").value
+        incv = document.getElementById("incv").value
+        inct = document.getElementById("inct").value
+        maxv = document.getElementById("maxv").value
+        maxt = document.getElementById("maxt").value
+        dcdelay = document.getElementById("dcdelay").value
+        controller.set_parm(maxv, maxt, initv, initt, incv, inct, dcdelay)
+
+    }
+</script>
+<script src="html/joystick.js" type="text/javascript"></script>
+</body>
+</html>
