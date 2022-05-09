@@ -28,8 +28,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToo
     QProgressBar, QTextBrowser
 import serial.tools.list_ports
 
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     wsserver = MCWebSocketserver()
@@ -39,6 +37,3 @@ if __name__ == '__main__':
     s = MCwin()
     s.show()
     sys.exit(app.exec_())
-
-
-

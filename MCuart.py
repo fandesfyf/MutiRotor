@@ -74,7 +74,7 @@ class Mavlink_widget(QWidget):
         self.mav.target_back_signal.connect(self.update_thrust)
         self.mav.sys_status_signal.connect(self.update_sys_status)
         self.bodystatus = {"x": 0, "y": 0, "z": 0, "vx": 0, "vy": 0, "vz": 0, "roll": 0, "pitch": 0, "yaw": 0, "rs": 0,
-                           "ps": 0, "ys": 0, "battery": 100, 'thrust': 0,"status":"unknown","mode":"unknown"}
+                           "ps": 0, "ys": 0, "battery": 100, 'thrust': 0, "status": "unknown", "mode": "unknown"}
         self.mav.batterysignal.connect(self.update_battery)
         self.reconnectthread = ReconnectThread(self, self.mav)
         self.speedchanging = 0  # 不变,1自动加速,2自动减速
@@ -157,7 +157,7 @@ class Mavlink_widget(QWidget):
               '{:>4}:{:>6.2f} ', '{:>5}:{:>6.2f} ', '{:>3}:{:>6.2f}\n',
               '{:>4}:{:>6.3f} ', '{:>5}:{:>6.3f} ', '{:>3}:{:>6.3f}\n',
               "{:>6}:{:>3.1f}% ", '{:>5}:{:<6.3f}\n',
-              "{:>5}:{:<5} ","{:>5}:{:<10}"]
+              "{:>5}:{:<5} ", "{:>5}:{:<10}"]
         status = "".join([i.format(k, v) for k, v, i in
                           zip(self.bodystatus.keys(), self.bodystatus.values(), id)])
         self.state.setText(s + status)
@@ -172,9 +172,11 @@ class Mavlink_widget(QWidget):
 
     def update_thrust(self, t, rr, pr, yr):
         self.bodystatus["thrust"] = t
-    def update_sys_status(self,syss,mode):
-        self.bodystatus["status"]=syss
-        self.bodystatus["mode"]=mode
+
+    def update_sys_status(self, syss, mode):
+        self.bodystatus["status"] = syss
+        self.bodystatus["mode"] = mode
+
     def update_pos(self, x, y, z, vx, vy, vz):
         self.bodystatus["x"] = x
         self.bodystatus["y"] = y
@@ -212,15 +214,15 @@ class Mavlink_widget(QWidget):
         # self.updatecmd()
 
     def sendpos(self):
-        self.mav.send_pos(0, 0, -1, vcc=True)
+        self.mav.pos_control(0, 0, -1)
         # self.speedchanging = 0
         # self.pwmdchange = 3
         # self.updatecmd()
 
     def in_offboard(self):
-        self.mav.in_offboard=~self.mav.in_offboard
+        # self.mav.in_offboard = ~self.mav.in_offboard
         self.mav.connection.mav.custom_cmd_send(self.mav.timestamp, 0, 0, 0, 0, 0, 0, "0".encode())
-        self.mav.send_pos(0, 0, -2)
+        # self.mav.pos_control(0, 0, -2)
 
     def updatecmd(self):
         print("update>{}|{}<".format(self.speedchanging, self.pwmdchange))
@@ -234,13 +236,13 @@ class Mavlink_MD(QThread):
     attitudesignal = pyqtSignal(float, float, float, float, float, float)
     possignal = pyqtSignal(float, float, float, float, float, float)
     target_back_signal = pyqtSignal(float, float, float, float)
-    sys_status_signal=pyqtSignal(str,str)
+    sys_status_signal = pyqtSignal(str, str)
 
     def __init__(self, parent: Mavlink_widget, com='com3'):
         super(Mavlink_MD, self).__init__()
         self.parent = parent
         self.connected = False
-        self.in_offboard=False
+        self.in_offboard = False
         self.com = com
         self.sendflag = {"pos": [], }
         self.timestamp = 0
@@ -318,16 +320,19 @@ class Mavlink_MD(QThread):
                         self.target_back_signal.emit(datas['thrust'], math.degrees(datas['body_roll_rate']),
                                                      math.degrees(datas['body_pitch_rate']),
                                                      math.degrees(datas['body_yaw_rate']))
-                    elif datas["mavpackettype"]=="DISTANCE_SENSOR":
-                        print("DISTANCE_SENSOR:",datas["current_distance"])
-                    elif datas["mavpackettype"]=="HEARTBEAT":
-                        system_status={3:"未解锁",4:"flying",5:"flying2"}
-                        custom_mode={100925440:"Land",33816576:"Takeoff",393216:"Offboard",458752:"Stabilized",196608:"Position"}
+                    # elif datas["mavpackettype"] == "DISTANCE_SENSOR":
+                    #     print("DISTANCE_SENSOR:", datas["current_distance"])
+                    elif datas["mavpackettype"] == "HEARTBEAT":
+                        system_status = {3: "未解锁", 4: "flying", 5: "flying2"}
+                        custom_mode = {100925440: "Land", 33816576: "Takeoff", 393216: "Offboard", 458752: "Stabilized",
+                                       196608: "Position"}
                         "system_status 表示系统状态 为3 即未解锁disarm,为4则已解锁或飞行中"
                         "custom_mode 表示模式,100925440 降落,33816576 起飞,393216 offboard,458752 自稳 ,196608 定点"
                         # print("SYSSTATUS:",datas["system_status"],datas["custom_mode"])
-                        self.sys_status_signal.emit(system_status[datas["system_status"]]if datas["system_status"] in system_status else "unknown",
-                                                    custom_mode[datas["custom_mode"]]if datas["custom_mode"] in custom_mode else "unknown")
+                        self.sys_status_signal.emit(system_status[datas["system_status"]] if datas[
+                                                                                                 "system_status"] in system_status else "unknown",
+                                                    custom_mode[datas["custom_mode"]] if datas[
+                                                                                             "custom_mode"] in custom_mode else "unknown")
                     # if datas["mavpackettype"] in ["CUSTOM_CMD"]:
                     #     print(datas)
                     # if datas["mavpackettype"] not in ['BAD_DATA', 'UNKNOWN_8', 'SYS_STATUS', 'ATTITUDE']:
@@ -348,27 +353,32 @@ class Mavlink_MD(QThread):
 
         print("mavlink thread end")
 
-    def send_pos(self, x=0, y=0, z=0, vcc=False):
-
-        # self.connection.mav.set_position_target_local_ned_send(0, 0, 0,
-        #                                                        mavutil.mavlink.MAV_FRAME_BODY_NED,
-        #                                                        0b0000111111000111 if vcc else 0b0000111111111000,
-        #                                                        0 if vcc else x, 0 if vcc else y, 0 if vcc else z,
-        #                                                        x if vcc else 0, y if vcc else 0, z if vcc else 0,
-        #                                                        0, 0, 0,
-        #                                                        0, 0)
-        # self.connection.mav.set_attitude_target_send()
+    def pos_control(self, x=0, y=0, z=0, vcc=None):
         # MAV_FRAME_BODY_NED只有速度加速度控制
+        if vcc is None:
+            vcc = [0, 0, 0]
         self.connection.mav.set_position_target_local_ned_send(0, 0, 0,
                                                                # mavutil.mavlink.MAV_FRAME_BODY_NED,
                                                                mavutil.mavlink.MAV_FRAME_LOCAL_NED,
                                                                # 0b0000111111111000,
-                                                               0b0000111111000111,
-                                                               0, 0, self.parent.sb.value(),
-                                                               0, 0, self.parent.sb.value(),
+                                                               0b0000111111000000 if vcc else 0b0000111111111000,
+                                                               x, y, z,
+                                                               vcc[0], vcc[1], vcc[2],
                                                                0, 0, 0,
                                                                0, 0)
-        # self.sendflag["pos"] = [self.timestamp + 200, 0, 0, 0, x, y, z, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        print("set pos x:{} y:{} z:{}".format(x, y, z))
+
+    def vcc_control(self, vx, vy, vz):
+        self.connection.mav.set_position_target_local_ned_send(0, 0, 0,
+                                                               # mavutil.mavlink.MAV_FRAME_BODY_NED,
+                                                               mavutil.mavlink.MAV_FRAME_BODY_NED,
+                                                               # 0b0000111111111000,
+                                                               0b0000111111000111,
+                                                               0, 0, 0,
+                                                               vx, vy, vz,
+                                                               0, 0, 0,
+                                                               0, 0)
+        print("set vcc vx:{} vy:{} vz:{}".format(vx, vy, vz))
 
     def listen_to_send(self):
         i = 0

@@ -5,6 +5,7 @@
 ======================
 """
 import asyncio
+import json
 import os
 import sys
 import threading
@@ -19,6 +20,7 @@ class MCWebSocketserver(threading.Thread):
     def __init__(self, host="", port=8787):
         super(MCWebSocketserver, self).__init__()
         self.host, self.port = host, port
+        self.set_point = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0, "mode": 1}
 
     async def requestcallback(self, websocket, path):
         print("request path:", path)
@@ -41,7 +43,8 @@ class MCWebSocketserver(threading.Thread):
         # asyncio.get_event_loop().run_until_complete(self.websockets_server)
         self.new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.new_loop)
-        self.websockets_server = websockets.serve(self.requestcallback, self.host, self.port, ping_interval=0.5,ping_timeout=1, timeout=1)
+        self.websockets_server = websockets.serve(self.requestcallback, self.host, self.port, ping_interval=0.5,
+                                                  ping_timeout=1, timeout=1)
         self.new_loop.run_until_complete(self.websockets_server)
         print("websocket server started!")
         self.new_loop.run_forever()
@@ -51,7 +54,12 @@ class MCWebSocketserver(threading.Thread):
                            websocket: websockets.WebSocketServerProtocol):  # websockets.server.WebSocketServerProtocol
         while True:
             recv_text = await websocket.recv()
-            print("rec:", recv_text)
+            try:
+                # print("rec:", recv_text)
+                a = json.loads(recv_text)
+                self.set_point = a
+            except:
+                print(sys.exc_info(), 60)
 
     async def heartbeat(self, websocket):
         while True:
