@@ -28,12 +28,27 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToo
     QProgressBar, QTextBrowser
 import serial.tools.list_ports
 
+
+class MutiRotor():
+    def __init__(self):
+        self.win = MCwin()
+        self.ws_server = MCWebSocketserver()
+        self.httpserver = httpserver()
+        self.ws_server.ws_cmd_signal.connect(self.win.mavcontroller.mav.handle_cmd)
+        self.win.closesignal.connect(self.ws_server.stop)
+        self.win.closesignal.connect(self.httpserver.stop)
+        self.ws_server.start()
+        self.httpserver.start()
+        self.win.show()
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    wsserver = MCWebSocketserver()
-    wsserver.start()
-    http_Server = httpserver()
-    http_Server.start()
-    s = MCwin()
-    s.show()
+    # wsserver = MCWebSocketserver()
+    # wsserver.start()
+    # http_Server = httpserver()
+    # http_Server.start()
+    # s = MCwin()
+    # s.show()
+    MutiRotor()
     sys.exit(app.exec_())

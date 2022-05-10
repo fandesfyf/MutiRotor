@@ -183,7 +183,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             if len(words):
                 if words[0] in ["html", "css", "js", "img", "favicon.ico"]:
-                    p = os.path.join(Work_Path,words[0] + path.split(words[0])[1])
+                    p = os.path.join(Work_Path, words[0] + path.split(words[0])[1])
                     return p
         return None
 
@@ -215,8 +215,16 @@ class httpserver(threading.Thread):
         self.threadingServer = ThreadingServer(("", 10590), self.http_handler)
 
     def run(self):
-        self.threadingServer.serve_forever()
         print("http server started!")
+        self.threadingServer.serve_forever()
+        print("http server exited!")
+
+    def stop(self):
+        try:
+            self.threadingServer.shutdown()
+            self.threadingServer.server_close()
+        except:
+            print(sys.exc_info(),226)
 
 
 class ThreadingServer(ThreadingMixIn, http.server.HTTPServer):

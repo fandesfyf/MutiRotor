@@ -10,13 +10,20 @@ import os
 import sys
 import threading
 import time
-
+from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer, QSettings, QFileInfo, \
+    QUrl, QObject, QSize
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
+    QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
+    QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
+    QProgressBar, QTextBrowser
 import websockets
 from httpserver import httpserver as Httpserver
 
 
 # 这个是用于测试的服务端程序,没有接入ros,用于测试连接
-class MCWebSocketserver(threading.Thread):
+class MCWebSocketserver(QThread):
+    ws_cmd_signal = pyqtSignal(float, float, float, float, float, int)
+
     def __init__(self, host="", port=8787):
         super(MCWebSocketserver, self).__init__()
         self.host, self.port = host, port
@@ -48,6 +55,10 @@ class MCWebSocketserver(threading.Thread):
         self.new_loop.run_until_complete(self.websockets_server)
         print("websocket server started!")
         self.new_loop.run_forever()
+        print("websocket server exited!")
+
+    def stop(self):
+        self.new_loop.stop()
 
     # 接收客户端消息并处理
     async def speedcontrol(self,
@@ -57,6 +68,7 @@ class MCWebSocketserver(threading.Thread):
             try:
                 # print("rec:", recv_text)
                 a = json.loads(recv_text)
+                self.ws_cmd_signal.emit(round(a["t"],2), round(a["r"],2), round(a["p"],2), round(a["y"],2), round(a["d"],2), a["mode"])
                 self.set_point = a
             except:
                 print(sys.exc_info(), 60)
@@ -64,8 +76,11 @@ class MCWebSocketserver(threading.Thread):
     async def heartbeat(self, websocket):
         while True:
             # print("heartbeat")
-            await websocket.send("0")
-            await asyncio.sleep(0.5)
+            try:
+                await websocket.send("0")
+                await asyncio.sleep(0.5)
+            except:
+                print(sys.exc_info(),79)
 
 
 class Logger(threading.Thread):

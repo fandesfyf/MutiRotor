@@ -177,7 +177,7 @@
             document.getElementById("joystickbox").style.display = 'none'
             document.getElementById("joystickbox2").style.display = 'none'
             document.getElementById("modeswitch").style = "background-image: url(\"img/switch1.png\");"
-            document.getElementById("modeswitch").innerText = "位置模式"
+            document.getElementById("modeswitch").innerText = "速度控制"
         }
     }
 
@@ -311,18 +311,18 @@
         this.inc_v = 0.2  // 速度增量
         this.inc_t = 0.15  // 角速度..
         this.doubleclick_delay = 250  // 判定双击的时间间隔ms
-        this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+        this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在速度控制下为x,y,h,r,d
         this.p_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}
         this.keydown = function (e) {
             console.log(e.type, e.key);
             kn = e.key.toLowerCase()
             var r;
             if (AvailableKeys.indexOf(kn) === -1) {
-                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在速度控制下为x,y,h,r,d
             } else if (["q", "escape"].indexOf(kn) !== -1)  // 退出
             {
                 console.log("quit")
-                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+                this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在速度控制下为x,y,h,r,d
                 this.controlling = false
 
             } else if (kn === this.last_click[0] && gettime() - this.last_click[1] < this.doubleclick_delay) // 判断是否是双击
@@ -436,7 +436,7 @@
                         this.controller.send_speed()
                     }, this.doubleclick_delay)
                 } else {
-                    this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在位置模式下为x,y,h,r,d
+                    this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在速度控制下为x,y,h,r,d
                 }
                 this.send_speed()
                 this.cur_param.t = cv
