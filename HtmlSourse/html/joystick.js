@@ -321,6 +321,7 @@ function onEndL(e) {//触屏释放
 }
 
 function mouseEndL(e) {
+    if (!touchmode) return
     on_leftcontrol = false
     if (timeId)
         clearInterval(timeId);
@@ -357,6 +358,7 @@ function onEndR(e) {//触屏释放或者按键释放
 }
 
 function mouseEndR(e) {
+    if (!touchmode) return
     on_rightcontrol = false
     if (timeId2)
         clearInterval(timeId2);

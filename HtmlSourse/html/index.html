@@ -70,11 +70,18 @@
     <div id="statelight"><p id="statetext">连接中...</p></div>
     <button class="btn" id="reloadbtn" onclick="pagereload()" style="background: darkred">刷新</button>
     <button class="btn" id="disconnect" onclick="controller.disconnect()" style="background-color: darkred">断开</button>
+    <button class="btn" id="disarm" onclick="controller.arm_disarm()" style="background-color: darkred">解锁</button>
+    <button class="btn" id="takeoff" onclick="controller.takeoff()" style="background-color: darkred">起飞</button>
     <button id="modeswitch" onclick="changemode()">姿态模式</button>
 </div>
 <form id="detalL">
     <p id="valueV">T:--</p><!-- throttle油门 -->
     <p id="valueR">Roll:--</p><!-- roll偏航rpy -->
+</form>
+<form id="statusbox">
+    <p id='status_vx'>vx:--</p>
+    <p id='status_vy'>vy:--</p>
+    <p id='status_vz'>vz:--</p>
 </form>
 <form id="detalR">
     <p id="valueP">Pitch:--</p><!-- throttle油门 -->
@@ -107,6 +114,8 @@
     var joystick2 = document.getElementById('joystick2');
     var stage1 = document.getElementById('stage');
     var stage2 = document.getElementById('stage2');
+    var disarm_btn=document.getElementById("disarm")
+    var takeoff_btn=document.getElementById("takeoff")
     var subX = 0;//相对位移
     var subY = R;
     var subX2 = 0;//相对位移
@@ -151,7 +160,7 @@
         touchmode = !touchmode;
         console.log("changmode", touchmode)
         if (touchmode) {
-            controller.control_mode=0
+            controller.control_mode = 0
             document.getElementById("btnW").style.display = 'none'
             document.getElementById("btnS").style.display = 'none'
             document.getElementById("btnA").style.display = 'none'
@@ -165,7 +174,7 @@
             document.getElementById("modeswitch").style = "background-image: url(\"img/switch2.png\");"
             document.getElementById("modeswitch").innerText = "姿态模式"
         } else {
-            controller.control_mode=1
+            controller.control_mode = 1
             document.getElementById("btnW").style.display = 'block'
             document.getElementById("btnS").style.display = 'block'
             document.getElementById("btnA").style.display = 'block'
@@ -293,6 +302,9 @@
     var valueR = document.getElementById("valueR")
     var valueP = document.getElementById("valueP")
     var valueY = document.getElementById("valueY")
+    var status_vx = document.getElementById("status_vx")
+    var status_vy = document.getElementById("status_vy")
+    var status_vz = document.getElementById("status_vz")
 
     function Controller() {
         this.control_mode = 1//0为姿态控制模式,1为位置控制
@@ -313,6 +325,8 @@
         this.doubleclick_delay = 250  // 判定双击的时间间隔ms
         this.cur_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}//在速度控制下为x,y,h,r,d
         this.p_param = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0}
+        this.status = {"x": 0, 'y': 0, 'z': 0}
+        this.arm = true
         this.keydown = function (e) {
             console.log(e.type, e.key);
             kn = e.key.toLowerCase()
@@ -465,8 +479,21 @@
             connected = true
         };
         this.ws.onmessage = function (evt) {
-            var received_msg = evt.data;//心跳连接
-            // console.log("beat...", received_msg);
+            jsd = JSON.parse(evt.data)
+            // console.log(jsd)
+            if (jsd.update) {
+                this.status = {"x": jsd.x, "y": jsd.y, "z": jsd.z}
+                status_vx.innerText = "vx:" + this.status.x.toFixed(3)
+                status_vy.innerText = "vy:" + this.status.y.toFixed(3)
+                status_vz.innerText = "vz:" + this.status.z.toFixed(3)+'\n'+jsd.status
+                if (jsd.status==="未解锁"){
+                    takeoff_btn.innerText="起飞"
+                    disarm_btn.innerText="解锁"
+                }else{
+                    takeoff_btn.innerText="降落"
+                    disarm_btn.innerText="锁定"
+                }
+            }
         };
         this.ws.onclose = function () {
             // 关闭 websocket
@@ -500,6 +527,14 @@
                 connected = true
             }
 
+        }
+        this.arm_disarm = function () {
+            packdata = (JSON.stringify({"t": 0, "r": 0, "p": 0, "y": 0, "d": 0, "mode": 2})).replace(/}{/, ',');
+            this.ws.send(packdata)
+        }
+        this.takeoff = function () {
+            packdata = (JSON.stringify({"t": 1, "r": 0, "p": 0, "y": 0, "d": 0, "mode": 2})).replace(/}{/, ',');
+            this.ws.send(packdata)
         }
         this.set_parm = function (maxv = 2.5, maxt = 2, initv = 0.15, initt = 0.2, incv = 0.2, inct = 0.15, dcdelay = 250) {
             this.max_v = parseFloat(maxv)  // 最大速度
@@ -556,15 +591,15 @@
         this.publish_speed = function () {
             this.p_param = this.cur_param
             packdata = JSON.parse((JSON.stringify(this.cur_param) + JSON.stringify({"mode": this.control_mode})).replace(/}{/, ','));
-            console.log(packdata,connected)
+            console.log(packdata, connected)
             if (connected) {
                 this.send(packdata)
-                if (this.control_mode===1) {
-                    valueV.innerText = "x:"+ this.cur_param["t"].toFixed(2).toString()
-                    valueR.innerText = "y:"+ this.cur_param["r"].toFixed(2).toString()
-                    valueP.innerText = "z:"+ this.cur_param["p"].toFixed(2).toString()
-                    valueY.innerText = "Θ:"+ this.cur_param["y"].toFixed(2).toString()
-                }else {
+                if (this.control_mode === 1) {
+                    valueV.innerText = "x:" + this.cur_param["t"].toFixed(2).toString()
+                    valueR.innerText = "y:" + this.cur_param["r"].toFixed(2).toString()
+                    valueP.innerText = "z:" + this.cur_param["p"].toFixed(2).toString()
+                    valueY.innerText = "Θ:" + this.cur_param["y"].toFixed(2).toString()
+                } else {
                     valueV.innerText = "T:" + this.cur_param["t"].toFixed(2).toString()
                     valueR.innerText = "Roll:" + this.cur_param["r"].toFixed(2).toString()
                     valueP.innerText = "Pitch:" + this.cur_param["p"].toFixed(2).toString()

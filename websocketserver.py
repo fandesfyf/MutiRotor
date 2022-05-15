@@ -28,6 +28,10 @@ class MCWebSocketserver(QThread):
         super(MCWebSocketserver, self).__init__()
         self.host, self.port = host, port
         self.set_point = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0, "mode": 1}
+        self.send_date = {"update": 0}
+
+    def update_status(self, x, y, z,status):
+        self.send_date = {"update": True, "x": x, "y": y, "z": z,"status":status}
 
     async def requestcallback(self, websocket, path):
         print("request path:", path)
@@ -36,10 +40,13 @@ class MCWebSocketserver(QThread):
             try:
                 task = asyncio.get_event_loop().create_task(self.speedcontrol(websocket))
                 task2 = asyncio.get_event_loop().create_task(self.heartbeat(websocket))
+                sendstatus = asyncio.get_event_loop().create_task(self.sendstatus(websocket))
                 await task
                 await task2
+                await sendstatus
             except:
                 print(sys.exc_info(), 31)
+
 
         else:
             print("unknown request")
@@ -51,7 +58,7 @@ class MCWebSocketserver(QThread):
         self.new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.new_loop)
         self.websockets_server = websockets.serve(self.requestcallback, self.host, self.port, ping_interval=0.5,
-                                                  ping_timeout=1, timeout=1)
+                                                  ping_timeout=2, timeout=2)
         self.new_loop.run_until_complete(self.websockets_server)
         print("websocket server started!")
         self.new_loop.run_forever()
@@ -68,10 +75,23 @@ class MCWebSocketserver(QThread):
             try:
                 # print("rec:", recv_text)
                 a = json.loads(recv_text)
-                self.ws_cmd_signal.emit(round(a["t"],2), round(a["r"],2), round(a["p"],2), round(a["y"],2), round(a["d"],2), a["mode"])
+                self.ws_cmd_signal.emit(round(a["t"], 2), round(a["r"], 2), round(a["p"], 2), round(a["y"], 2),
+                                        round(a["d"], 2), a["mode"])
                 self.set_point = a
             except:
                 print(sys.exc_info(), 60)
+
+    async def sendstatus(self, websocket):
+        while True:
+            try:
+                if self.send_date["update"]:
+                    await websocket.send(json.dumps(self.send_date))
+                    self.send_date["update"] = False
+                else:
+                    await asyncio.sleep(0.02)
+            except:
+                print(sys.exc_info(), 87)
+                break
 
     async def heartbeat(self, websocket):
         while True:
@@ -80,7 +100,8 @@ class MCWebSocketserver(QThread):
                 await websocket.send("0")
                 await asyncio.sleep(0.5)
             except:
-                print(sys.exc_info(),79)
+                print(sys.exc_info(), 79)
+                break
 
 
 class Logger(threading.Thread):

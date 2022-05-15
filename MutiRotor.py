@@ -37,6 +37,7 @@ class MutiRotor():
         self.ws_server.ws_cmd_signal.connect(self.win.mavcontroller.mav.handle_cmd)
         self.win.closesignal.connect(self.ws_server.stop)
         self.win.closesignal.connect(self.httpserver.stop)
+        self.win.update_status_signal.connect(self.ws_server.update_status)
         self.ws_server.start()
         self.httpserver.start()
         self.win.show()

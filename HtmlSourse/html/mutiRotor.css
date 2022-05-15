@@ -199,10 +199,62 @@ body {
 
 #connectbox {
     position: absolute;
-    right: 14em;
-    top: 2em;
+    left: 25%;
+    top: 1em;
 }
 
+
+#disconnect {
+    z-index: 10;
+    position: relative;
+    width: 4em;
+    height: 2em;
+    top: -1.4em;
+    left: 3em;
+    border-radius: 1em;
+}
+
+#reloadbtn {
+    z-index: 10;
+    position: relative;
+    top: 1em;
+    left: 8.2em;
+    width: 4em;
+    height: 2em;
+    border-radius: 1em;
+}
+#disarm{
+     z-index: 10;
+    position: relative;
+    top: 1em;
+    left: 3.2em;
+    width: 4em;
+    height: 2em;
+
+}
+#takeoff{
+    z-index: 10;
+    position: relative;
+    top: -1.4em;
+    left: -2em;
+    width: 4em;
+    height: 2em;
+}
+#modeswitch {
+    z-index: 10;
+    background-image: url("../img/switch1.png");
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    color: darkorange;
+    font-size: 0.8em;
+    top: 1em;
+    left: -18.5em;
+    width: 5.4em;
+    height: 2.1em;
+    border-radius: 1.25em;
+}
 
 #statelight {
     float: bottom;
@@ -228,43 +280,6 @@ body {
     user-select: none;
 }
 
-#disconnect {
-    z-index: 10;
-    position: relative;
-    width: 4em;
-    height: 2em;
-    top: -1.4em;
-    left: 3em;
-    margin: 0;
-    padding: 0;
-    border-radius: 1em;
-}
-
-#reloadbtn {
-    z-index: 10;
-    position: relative;
-    top: 1em;
-    left: 8em;
-    width: 4em;
-    height: 2em;
-    border-radius: 1em;
-}
-
-#modeswitch {
-    z-index: 10;
-    background-image: url("../img/switch1.png");
-    position: relative;
-    background-repeat: no-repeat;
-    background-size: contain;
-    background-position: center;
-    color: darkorange;
-    font-size: 0.8em;
-    top: 1em;
-    left: -10em;
-    width: 5.4em;
-    height: 2.1em;
-    border-radius: 1.25em;
-}
 
 #detalL {
     /* 具体速度加速度*/
@@ -277,6 +292,18 @@ body {
     left: 1em;
     padding-bottom: 1px;
     line-height: 1.8em;
+    user-select: none;
+}
+#statusbox{
+/*    回传状态显示*/
+    color: aliceblue;
+    font-size: 1.2em;
+    position: absolute;
+    text-align: left;
+    top: 20%;
+    left: 40%;
+    height: 1em;
+    padding-bottom: 1px;
     user-select: none;
 }
 
