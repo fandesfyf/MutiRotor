@@ -355,6 +355,22 @@ body {
     padding-right: 10px;
 }
 
+.btn:active {
+    margin-right: 10px;
+    background: border-box;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    color: red;
+    padding-left: 5px;
+    padding-right: 15px;
+    border-radius: 1em;
+    transform: rotateY(35deg);
+    box-shadow: 2px 1px 1px 5px rgba(120, 150, 180, 0.1);
+
+}
+
+
 #menubtn {
     background-image: url("../img/menu.png");
     background-size: contain;
@@ -405,7 +421,6 @@ body {
     border-radius: 2em;
     transform: rotateY(35deg);
     box-shadow: 2px 1px 1px 5px rgba(120, 150, 180, 0.1);
-
 }
 
 .tbtn {

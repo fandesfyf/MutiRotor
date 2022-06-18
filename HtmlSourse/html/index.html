@@ -10,6 +10,14 @@
     <meta content="true" name="x5-fullscreen">
     <meta content="width=device-width, initial-scale=1,maximum-scale=1.0, user-scalable=no" name="viewport">
     <link href="html/mutiRotor.css" rel="stylesheet" type="text/css"/>
+
+    <meta http-equiv="Expires" content="0">
+
+    <meta http-equiv="Pragma" content="no-cache">
+
+    <meta http-equiv="Cache-control" content="no-cache">
+
+    <meta http-equiv="Cache" content="no-cache">
     <!--    <style type="text/css">-->
     <!--    </style>-->
 </head>
@@ -76,7 +84,7 @@
 </div>
 <form id="detalL">
     <p id="valueV">T:--</p><!-- throttle油门 -->
-    <p id="valueR">Roll:--</p><!-- roll偏航rpy -->
+    <p id="valueY">Roll:--</p><!-- roll偏航rpy -->
 </form>
 <form id="statusbox">
     <p id='status_vx'>vx:--</p>
@@ -85,7 +93,7 @@
 </form>
 <form id="detalR">
     <p id="valueP">Pitch:--</p><!-- throttle油门 -->
-    <p id="valueY">Yaw:--</p><!-- roll偏航rpy -->
+    <p id="valueR">Yaw:--</p><!-- roll偏航rpy -->
 </form>
 <div id="settingsbox">
     <form id="inputform">
@@ -347,13 +355,13 @@
                     this.cur_param.t += (kn === "w") ? this.inc_v : -this.inc_v
                 } else if ("ad".indexOf(kn) !== -1) {
                     clearTimeout(this.setRtimeout)
-                    this.cur_param.r += (kn === "a") ? this.inc_v : -this.inc_v
+                    this.cur_param.y += (kn === "a") ? this.inc_v : -this.inc_v
                 } else if ("ik".indexOf(kn) !== -1) {
                     clearTimeout(this.setPtimeout)
                     this.cur_param.p += (kn === "i") ? this.inc_v : -this.inc_v
                 } else if ("jl".indexOf(kn) !== -1) {
                     clearTimeout(this.setYtimeout)
-                    this.cur_param.y += (kn === "j") ? this.inc_v : -this.inc_v
+                    this.cur_param.r += (kn === "j") ? this.inc_v : -this.inc_v
                 }
                 this.send_speed()
                 // this.doubleclick(kn)
@@ -372,16 +380,16 @@
                         this.cur_param.t = (this.cur_param.t > 0) ? 0 : this.cur_param.t
                     }
                 } else if (kn === "d") {
-                    if (this.cur_param.r === 0) {
-                        this.cur_param.r = -this.init_v
+                    if (this.cur_param.y === 0) {
+                        this.cur_param.y = -this.init_v
                     } else {
-                        this.cur_param.r = (this.cur_param.r > 0) ? 0 : this.cur_param.r
+                        this.cur_param.y = (this.cur_param.y > 0) ? 0 : this.cur_param.y
                     }
                 } else if (kn === "a") {
-                    if (this.cur_param.r === 0) {
-                        this.cur_param.r = this.init_v
+                    if (this.cur_param.y === 0) {
+                        this.cur_param.y = this.init_v
                     } else {
-                        this.cur_param.r = (this.cur_param.r < 0) ? 0 : this.cur_param.r
+                        this.cur_param.y = (this.cur_param.y < 0) ? 0 : this.cur_param.y
                     }
                 } else if (kn === "i") {
                     if (this.cur_param.p === 0) {
@@ -396,16 +404,16 @@
                         this.cur_param.p = (this.cur_param.p > 0) ? 0 : this.cur_param.p
                     }
                 } else if (kn === "j") {
-                    if (this.cur_param.y === 0) {
-                        this.cur_param.y = this.init_v
+                    if (this.cur_param.r === 0) {
+                        this.cur_param.r = this.init_v
                     } else {
-                        this.cur_param.y = (this.cur_param.y < 0) ? 0 : this.cur_param.y
+                        this.cur_param.r = (this.cur_param.r < 0) ? 0 : this.cur_param.r
                     }
                 } else if (kn === "l") {
-                    if (this.cur_param.y === 0) {
-                        this.cur_param.y = -this.init_v
+                    if (this.cur_param.r === 0) {
+                        this.cur_param.r = -this.init_v
                     } else {
-                        this.cur_param.y = (this.cur_param.y > 0) ? 0 : this.cur_param.y
+                        this.cur_param.r = (this.cur_param.r > 0) ? 0 : this.cur_param.r
                     }
                 }
 
@@ -419,7 +427,7 @@
                 return
             if (kn.length === 1) {
                 cv = this.cur_param.t
-                ct = this.cur_param.r
+                // ct = this.cur_param.r
                 this.last_click = [kn, Number(gettime().toString())]
                 if ("ws".indexOf(kn) !== -1) {
                     clearTimeout(this.setTtimeout)
@@ -432,7 +440,7 @@
                     clearTimeout(this.setRtimeout)
                     this.setRtimeout = setTimeout(function () {
                         console.log("r超时重置")
-                        this.controller.cur_param.r = 0
+                        this.controller.cur_param.y = 0
                         this.controller.send_speed()
                     }, this.doubleclick_delay)
                 } else if ("ik".indexOf(kn) !== -1) {
@@ -446,7 +454,7 @@
                     clearTimeout(this.setYtimeout)
                     this.setYtimeout = setTimeout(function () {
                         console.log("jl超时重置")
-                        this.controller.cur_param.y = 0
+                        this.controller.cur_param.r = 0
                         this.controller.send_speed()
                     }, this.doubleclick_delay)
                 } else {
@@ -454,7 +462,7 @@
                 }
                 this.send_speed()
                 this.cur_param.t = cv
-                this.cur_param.r = ct
+                // this.cur_param.r = ct
             }
         }
         // 打开一个 web socket
@@ -634,3 +642,4 @@
 <script src="html/joystick.js" type="text/javascript"></script>
 </body>
 </html>
+

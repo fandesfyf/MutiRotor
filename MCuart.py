@@ -4,9 +4,10 @@
 @time:2022/1/2:14:53
 ======================
 """
+import math
 import sys
 import time
-import math
+
 import serial  # 导入模块
 import serial.tools.list_ports
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -81,8 +82,10 @@ class Mavlink_widget(QWidget):
         self.mav.possignal.connect(self.update_pos)
         self.mav.target_back_signal.connect(self.update_thrust)
         self.mav.sys_status_signal.connect(self.update_sys_status)
+        self.mav.temperature_signal.connect(self.update_temperature)
         self.bodystatus = {"x": 0, "y": 0, "z": 0, "vx": 0, "vy": 0, "vz": 0, "roll": 0, "pitch": 0, "yaw": 0, "rs": 0,
-                           "ps": 0, "ys": 0, "battery": 100, 'thrust': 0, "status": "unknown", "mode": "unknown"}
+                           "ps": 0, "ys": 0, "battery": 100, 'thrust': 0, "status": "unknown", "mode": "unknown",
+                           "T": 25.0}
         self.mav.batterysignal.connect(self.update_battery)
         self.reconnectthread = ReconnectThread(self, self.mav)
         self.speedchanging = 0  # 不变,1自动加速,2自动减速
@@ -150,7 +153,7 @@ class Mavlink_widget(QWidget):
 
         self.state = QLabel(self)
         self.state.setWordWrap(True)
-        self.state.setGeometry(5, self.height() - 200, 540, 200)
+        self.state.setGeometry(5, self.height() - 200, 540, 220)
         self.state.setText("未连接!")
         self.state.setFont(QFont("Timers", 15, QFont.Bold))
 
@@ -165,7 +168,7 @@ class Mavlink_widget(QWidget):
               '{:>4}:{:>6.2f} ', '{:>5}:{:>6.2f} ', '{:>3}:{:>6.2f}\n',
               '{:>4}:{:>6.3f} ', '{:>5}:{:>6.3f} ', '{:>3}:{:>6.3f}\n',
               "{:>6}:{:>3.1f}% ", '{:>5}:{:<6.3f}\n',
-              "{:>5}:{:<5} ", "{:>5}:{:<10}"]
+              "{:>5}:{:<5} ", "{:>4}:{:<8}", "{:>2}:{:>5.1f} \n"]
         status = "".join([i.format(k, v) for k, v, i in
                           zip(self.bodystatus.keys(), self.bodystatus.values(), id)])
         self.state.setText(s + status)
@@ -184,6 +187,9 @@ class Mavlink_widget(QWidget):
     def update_sys_status(self, syss, mode):
         self.bodystatus["status"] = syss
         self.bodystatus["mode"] = mode
+
+    def update_temperature(self, t, h):
+        self.bodystatus["T"] = t
 
     def update_pos(self, x, y, z, vx, vy, vz):
         self.bodystatus["x"] = x
@@ -223,7 +229,7 @@ class Mavlink_widget(QWidget):
         # self.updatecmd()
 
     def sendpos(self):
-        self.mav.pos_control(0, 0, -1)
+        self.mav.pos_control(0, 0, self.sb.value())
         # self.speedchanging = 0
         # self.pwmdchange = 3
         # self.updatecmd()
@@ -246,6 +252,7 @@ class Mavlink_MD(QThread):
     possignal = pyqtSignal(float, float, float, float, float, float)
     target_back_signal = pyqtSignal(float, float, float, float)
     sys_status_signal = pyqtSignal(str, str)
+    temperature_signal = pyqtSignal(float, float)
 
     def __init__(self, parent: Mavlink_widget, com='com3'):
         super(Mavlink_MD, self).__init__()
@@ -260,25 +267,28 @@ class Mavlink_MD(QThread):
 
     def handle_cmd(self, t, r, p, y, d, mode):  # 网页端传回的数据
         print("handle", t, r, p, y, d, mode)
-        if mode == 1:
-            self.vcc_control(t, r, p)
-        elif mode == 2:
-            if t == 0:  # 解锁
-                if self.parent.bodystatus["status"] == "未解锁":
-                    print("rec to disarm")
-                    self.parent.in_offboard()
-                else:
-                    print("rec to arm")
-                    self.parent.arm()
-            elif t == 1:  # 起飞
-                if self.parent.bodystatus["mode"].lower() == "Offboard".lower():
-                    print("rec to land")
-                    self.parent.land()
-                else:
-                    print("rec to takeoff")
-                    self.parent.takeoff()
-        else:
-            self.attitude_control(r, p, y, t)
+        try:
+            if mode == 1:
+                self.vcc_control(t, r, p)
+            elif mode == 2:
+                if t == 0:  # 解锁
+                    if self.parent.bodystatus["status"] == "未解锁":
+                        print("rec to arm")
+                        self.parent.in_offboard()
+                    else:
+                        print("rec to disarm")
+                        self.parent.disarm()
+                elif t == 1:  # 起飞
+                    if self.parent.bodystatus["mode"].lower() == "Offboard".lower():
+                        print("rec to land")
+                        self.parent.land()
+                    else:
+                        print("rec to takeoff")
+                        self.parent.takeoff()
+            else:
+                self.attitude_control(r, p, y, t)
+        except:
+            print("消息处理错误", sys.exc_info())
 
     def connectchange(self):
         if self.connected:
@@ -367,8 +377,9 @@ class Mavlink_MD(QThread):
                                                                                                  "system_status"] in system_status else "unknown",
                                                     custom_mode[datas["custom_mode"]] if datas[
                                                                                              "custom_mode"] in custom_mode else "unknown")
-                    # if datas["mavpackettype"] in ["CUSTOM_CMD"]:
-                    #     print(datas)
+                    elif datas["mavpackettype"] in ["CUSTOM_CMD"]:
+                        if datas["data1"] < 200 and datas["data2"] < 1000:
+                            self.temperature_signal.emit(datas["data1"], datas["data2"])
                     # if datas["mavpackettype"] not in ['BAD_DATA', 'UNKNOWN_8', 'SYS_STATUS', 'ATTITUDE']:
                     #     print(datas)
                     # self.connection.mav.set_position_target_local_ned_send(datas["timestamp"], 0, 0, 0, 0, 0, 0, -5,
@@ -390,15 +401,15 @@ class Mavlink_MD(QThread):
     def pos_control(self, x=0.0, y=0.0, z=0.0, vcc=None):
         # MAV_FRAME_BODY_NED只有速度加速度控制
         if not self.connection: return
-        if vcc is None:
-            vcc = [0.0, 0.0, 0.0]
         self.connection.mav.set_position_target_local_ned_send(0, 0, 0,
                                                                # mavutil.mavlink.MAV_FRAME_BODY_NED,
                                                                mavutil.mavlink.MAV_FRAME_LOCAL_NED,
                                                                # 0b0000111111111000,
-                                                               0b0000111111000000 if vcc else 0b0000111111111000,
+                                                               0b0000111111000000 if vcc is not None else 0b0000111111111000,
                                                                x, y, z,
-                                                               vcc[0], vcc[1], vcc[2],
+                                                               0 if vcc is None else vcc[0],
+                                                               0 if vcc is None else vcc[1],
+                                                               0 if vcc is None else vcc[2],
                                                                0, 0, 0,
                                                                0, 0)
         print("set pos x:{} y:{} z:{}".format(x, y, z))
@@ -417,9 +428,29 @@ class Mavlink_MD(QThread):
                                                                0, 0)
         print("set vcc vx:{} vy:{} vz:{}".format(vx, -vy, -vz))
 
+    def rescale(self, target_range, origin_range, center, value):
+        if value == 0:
+            return center
+
+        range_target = target_range[1] - target_range[0]
+        range_origin = origin_range[1] - origin_range[0]
+        return target_range[0] + range_target * (value - origin_range[0]) / range_origin
+
     def attitude_control(self, roll, pitch, yaw, th):
         if not self.connection: return
+        th_range = [1039, 2037, 0, 200, 1039]
+        r_range = [1999, 999, -100, 100, 1500]
+        p_range = [999, 1999, -100, 100, 1496]
+        y_range = [989, 1989, -100, 100, 1497]
 
+        roll = self.rescale(r_range[0:2], r_range[2:4], r_range[4], roll)
+        pitch = self.rescale(p_range[0:2], p_range[2:4], p_range[4], pitch)
+        th = self.rescale(th_range[0:2], th_range[2:4], th_range[4], th)
+        yaw = self.rescale(y_range[0:2], y_range[2:4], y_range[4], yaw)
+        self.connection.mav.rc_channels_override_send(0, 0, int(roll), int(pitch), int(th), int(yaw),
+                                                      0, 0, 0, 0, 0,
+                                                      0, 0, 0, 0, 0,
+                                                      0, 0, 0, 0, 254)
         # self.connection.mav.set_position_target_local_ned_send(0, 0, 0,
         #                                                        # mavutil.mavlink.MAV_FRAME_BODY_NED,
         #                                                        mavutil.mavlink.MAV_FRAME_BODY_NED,

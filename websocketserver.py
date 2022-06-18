@@ -30,8 +30,8 @@ class MCWebSocketserver(QThread):
         self.set_point = {"t": 0, "r": 0, "p": 0, "y": 0, "d": 0, "mode": 1}
         self.send_date = {"update": 0}
 
-    def update_status(self, x, y, z,status):
-        self.send_date = {"update": True, "x": x, "y": y, "z": z,"status":status}
+    def update_status(self, x, y, z, status):
+        self.send_date = {"update": True, "x": x, "y": y, "z": z, "status": status}
 
     async def requestcallback(self, websocket, path):
         print("request path:", path)
@@ -57,8 +57,8 @@ class MCWebSocketserver(QThread):
         # asyncio.get_event_loop().run_until_complete(self.websockets_server)
         self.new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.new_loop)
-        self.websockets_server = websockets.serve(self.requestcallback, self.host, self.port, ping_interval=0.5,
-                                                  ping_timeout=2, timeout=2)
+        self.websockets_server = websockets.serve(self.requestcallback, self.host, self.port, ping_interval=0.1,
+                                                  ping_timeout=10, timeout=10)
         self.new_loop.run_until_complete(self.websockets_server)
         print("websocket server started!")
         self.new_loop.run_forever()

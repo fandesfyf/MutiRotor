@@ -27,10 +27,10 @@ function onEf() {//指定频率触发的函数
     var scalex = subX / R;
     var scaley = (-subY + R) / (2 * R);
     t = controller.scale_cp * 2 * scaley
-    r = controller.scale_cp * scalex
+    y = controller.scale_cp * scalex
     t = (Math.abs(t) > controller.err * 2) ? t : 0
-    r = (Math.abs(r) > controller.err) ? r : 0
-    set_cur_data(t, r)
+    y = (Math.abs(y) > controller.err) ? y : 0
+    set_cur_data(t, y)
 }
 
 function onEf2() {//指定频率触发的函数
@@ -41,10 +41,10 @@ function onEf2() {//指定频率触发的函数
     var scalex = subX2 / R;
     var scaley = -subY2 / R;
     p = controller.scale_cp * scaley
-    y = controller.scale_cp * scalex
+    r = controller.scale_cp * scalex
     p = (Math.abs(p) > controller.err) ? p : 0
-    y = (Math.abs(y) > controller.err) ? y : 0
-    set_cur_data(null, null, p, y)
+    r = (Math.abs(r) > controller.err) ? r : 0
+    set_cur_data(null, null, p, r)
 }
 
 function onTouchStartL(e) {//这个是屏幕点击开始,不是按键那个
@@ -379,7 +379,7 @@ function setjoystickpos(v, t) {
     debugtext.innerText = v.toString() + " " + t.toString() + " " + joystick1.style.left + " " + joystick1.style.top
 }
 
-function set_cur_data(t = null, r = null, p = null, y = null, d = null) {
+function set_cur_data(t = null, y = null, p = null, r = null, d = null) {
     t = (t !== null) ? t : controller.cur_param["t"]
     r = (r !== null) ? r : controller.cur_param["r"]
     p = (p !== null) ? p : controller.cur_param["p"]
